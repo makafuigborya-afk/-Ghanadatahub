@@ -1,173 +1,229 @@
-import React, { useState, useEffect } from "react"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; import { motion } from "framer-motion";
+"use client";
+import { useState, useEffect } from "react";
 
-export default function DataResellerSite() { const [network, setNetwork] = useState(""); const [amount, setAmount] = useState(""); const [phone, setPhone] = useState(""); const [screenshot, setScreenshot] = useState(null); const [orders, setOrders] = useState([]); const [adminMode, setAdminMode] = useState(false); const [password, setPassword] = useState("");
+export default function Home() {
 
-const ADMIN_PASSWORD = "1234"; // CHANGE THIS BEFORE LAUNCH const WHATSAPP_NUMBER = "23354XXXXXXX"; // Replace with your WhatsApp number (without +)
+const [network,setNetwork]=useState("");
+const [bundle,setBundle]=useState("");
+const [phone,setPhone]=useState("");
+const [orders,setOrders]=useState([]);
+const [admin,setAdmin]=useState(false);
+const [password,setPassword]=useState("");
 
-useEffect(() => { const savedOrders = localStorage.getItem("orders"); if (savedOrders) setOrders(JSON.parse(savedOrders)); }, []);
+const ADMIN_PASSWORD="1234";
+const MOMO_NUMBER="054XXXXXXX";
+const WHATSAPP="23354XXXXXXX";
 
-useEffect(() => { localStorage.setItem("orders", JSON.stringify(orders)); }, [orders]);
+const bundles = [
+{size:"1GB",price:5},
+{size:"2GB",price:9},
+{size:"5GB",price:20},
+{size:"10GB",price:35},
+];
 
-const handleOrder = () => { if (!network || !amount || !phone || !screenshot) { return alert("Please complete all fields and upload payment screenshot"); }
+useEffect(()=>{
+const data=localStorage.getItem("orders");
+if(data){setOrders(JSON.parse(data))}
+},[])
 
-const newOrder = {
-  id: Date.now(),
-  network,
-  amount,
-  phone,
-  status: "Pending",
-  date: new Date().toLocaleString()
-};
+useEffect(()=>{
+localStorage.setItem("orders",JSON.stringify(orders))
+},[orders])
 
-setOrders([newOrder, ...orders]);
-setNetwork("");
-setAmount("");
-setPhone("");
-setScreenshot(null);
-alert("Order submitted successfully. Await confirmation.");
+function submitOrder(){
 
-};
+if(!network||!bundle||!phone){
+alert("Fill all fields");
+return;
+}
 
-const markDelivered = (id) => { const updated = orders.map((order) => order.id === id ? { ...order, status: "Delivered" } : order ); setOrders(updated); };
+const order={
+id:Date.now(),
+network,
+bundle,
+phone,
+status:"Pending",
+date:new Date().toLocaleString()
+}
 
-const totalProfit = orders .filter((o) => o.status === "Delivered") .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+setOrders([order,...orders])
 
-if (adminMode && password !== ADMIN_PASSWORD) { return ( <div className="min-h-screen flex items-center justify-center bg-gray-100"> <Card className="p-6 rounded-2xl shadow-xl"> <Input type="password" placeholder="Enter Admin Password" onChange={(e) => setPassword(e.target.value)} /> </Card> </div> ); }
+const message=`New Data Order
+Network: ${network}
+Bundle: ${bundle}
+Phone: ${phone}`
 
-return ( <div className="min-h-screen bg-gray-100 p-6 grid gap-6">
+window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`)
 
-{/* LOGO SECTION */}
-  <motion.div
-    initial={{ opacity: 0, y: -20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="text-center"
-  >
-    <h1 className="text-4xl font-extrabold">⚡ Ghana Data Hub</h1>
-    <p className="text-gray-600">Fast • Affordable • Reliable Data Bundles</p>
-  </motion.div>
+setNetwork("")
+setBundle("")
+setPhone("")
 
-  {!adminMode && (
-    <Card className="max-w-xl mx-auto rounded-2xl shadow-lg">
-      <CardContent className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Buy Data</h2>
+alert("Order sent successfully. Please complete payment.")
 
-        <Select onValueChange={setNetwork} value={network}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select Network" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="MTN">MTN</SelectItem>
-            <SelectItem value="Telecel">Telecel</SelectItem>
-            <SelectItem value="AirtelTigo">AirtelTigo</SelectItem>
-          </SelectContent>
-        </Select>
+}
 
-        <Input
-          type="number"
-          placeholder="Amount Paid (GH₵)"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+function markDelivered(id){
 
-        <Input
-          type="tel"
-          placeholder="Customer Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+const updated=orders.map(o=>{
+if(o.id===id){
+return {...o,status:"Delivered"}
+}
+return o
+})
 
-        <div className="bg-gray-50 p-3 rounded-xl text-sm">
-          <p className="font-semibold">Payment Instructions:</p>
-          <p>1. Send MoMo to: <strong>054XXXXXXX (Your Name)</strong></p>
-          <p>2. Upload payment screenshot below.</p>
-          <p>3. Click Submit Order.</p>
-          <p className="text-green-600 font-medium">Delivery time: 5–15 minutes.</p>
-        </div>
+setOrders(updated)
 
-        <Input
-          type="file"
-          onChange={(e) => setScreenshot(e.target.files[0])}
-        />
+}
 
-        <Button className="w-full" onClick={handleOrder}>
-          Submit Order
-        </Button>
+if(admin && password!==ADMIN_PASSWORD){
+return(
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, "_blank")}
-        >
-          Chat Us on WhatsApp
-        </Button>
+<div style={{padding:40,textAlign:"center"}}>
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => setAdminMode(true)}
-        >
-          Admin Login
-        </Button>
-      </CardContent>
-    </Card>
-  )}
+<h2>Admin Login</h2>
 
-  {adminMode && (
-    <Card className="max-w-3xl mx-auto rounded-2xl shadow-lg">
-      <CardContent className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Admin Dashboard</h2>
-        <p className="mb-4 font-medium">Total Delivered Sales: GH₵ {totalProfit}</p>
+<input
+type="password"
+placeholder="Enter password"
+onChange={(e)=>setPassword(e.target.value)}
+style={{padding:10,width:200}}
+/>
 
-        {orders.length === 0 && <p>No orders yet.</p>}
-
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="p-4 bg-white rounded-xl shadow flex justify-between items-center"
-            >
-              <div>
-                <p className="font-medium">
-                  {order.network} - GH₵ {order.amount}
-                </p>
-                <p className="text-sm text-gray-500">{order.phone}</p>
-                <p className="text-xs text-gray-400">{order.date}</p>
-              </div>
-              <div className="flex gap-2 items-center">
-                <span className="text-sm font-semibold">
-                  {order.status}
-                </span>
-                {order.status === "Pending" && (
-                  <Button size="sm" onClick={() => markDelivered(order.id)}>
-                    Mark Delivered
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Button
-          variant="outline"
-          className="w-full mt-6"
-          onClick={() => setAdminMode(false)}
-        >
-          Back to Store
-        </Button>
-      </CardContent>
-    </Card>
-  )}
-
-  {/* TESTIMONIAL SECTION */}
-  {!adminMode && (
-    <Card className="max-w-xl mx-auto rounded-2xl shadow-md">
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-2">What Our Customers Say</h3>
-        <p className="text-sm text-gray-600">“Very fast delivery! I received my data in 3 minutes.”</p>
-        <p className="text-sm text-gray-600">“Trusted and reliable. Highly recommended.”</p>
-      </CardContent>
-    </Card>
-  )}
 </div>
 
-); }
+)
+}
+
+return(
+
+<div style={{fontFamily:"Arial",padding:20,maxWidth:600,margin:"auto"}}>
+
+<h1 style={{textAlign:"center"}}>⚡ Ghana Data Hub</h1>
+<p style={{textAlign:"center"}}>Cheap & Fast Data Bundles</p>
+
+{!admin && (
+
+<div style={{border:"1px solid #ddd",padding:20,borderRadius:10}}>
+
+<h3>Buy Data</h3>
+
+<select
+value={network}
+onChange={(e)=>setNetwork(e.target.value)}
+style={{padding:10,width:"100%",marginBottom:10}}
+>
+
+<option value="">Select Network</option>
+<option>MTN</option>
+<option>Telecel</option>
+<option>AirtelTigo</option>
+
+</select>
+
+<select
+value={bundle}
+onChange={(e)=>setBundle(e.target.value)}
+style={{padding:10,width:"100%",marginBottom:10}}
+>
+
+<option value="">Select Data Bundle</option>
+
+{bundles.map((b,i)=>(
+<option key={i}>
+{b.size} - GH₵{b.price}
+</option>
+))}
+
+</select>
+
+<input
+placeholder="Customer Phone Number"
+value={phone}
+onChange={(e)=>setPhone(e.target.value)}
+style={{padding:10,width:"100%",marginBottom:10}}
+/>
+
+<div style={{background:"#f3f3f3",padding:10,marginBottom:10}}>
+
+<p><b>Payment Instructions</b></p>
+<p>Send MoMo to: {0507141580/247659110}</p>
+<p>After payment click Submit Order</p>
+<p>Delivery time: 5-15 minutes</p>
+
+</div>
+
+<button
+onClick={submitOrder}
+style={{padding:12,width:"100%",background:"black",color:"white"}}
+>
+
+Submit Order
+
+</button>
+
+<button
+onClick={()=>window.open(`https://wa.me/${WHATSAPP}`)}
+style={{padding:10,width:"100%",marginTop:10}}
+>
+
+Customer Support (WhatsApp)
+
+</button>
+
+<button
+onClick={()=>setAdmin(true)}
+style={{padding:10,width:"100%",marginTop:10}}
+>
+
+Admin Login
+
+</button>
+
+</div>
+
+)}
+
+{admin && (
+
+<div>
+
+<h3>Admin Dashboard</h3>
+
+{orders.map(o=>(
+<div key={o.id} style={{border:"1px solid #ddd",padding:10,marginBottom:10}}>
+
+<p>{o.network} - {o.bundle}</p>
+<p>{o.phone}</p>
+<p>{o.date}</p>
+<p>Status: {o.status}</p>
+
+{o.status==="Pending" && (
+
+<button onClick={()=>markDelivered(o.id)}>
+Mark Delivered
+</button>
+
+)}
+
+</div>
+))}
+
+<button
+onClick={()=>setAdmin(false)}
+style={{padding:10,width:"100%"}}
+>
+
+Back
+
+</button>
+
+</div>
+
+)}
+
+</div>
+
+)
+
+}
